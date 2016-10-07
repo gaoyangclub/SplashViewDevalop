@@ -10,6 +10,7 @@
 #import "SplashSourceTransport.h"
 #import "CACircleLayer.h"
 #import "extobjc.h"
+#import "LaceLayer.h"
 
 @interface SplashSourceTransport (){
 //    BOOL isAnimation;//私有临时属性
@@ -19,12 +20,15 @@
 @property(nonatomic,retain)CACircleLayer* circleLayer;
 @property(nonatomic,retain)CAShapeLayer* squareLayer;
 @property(nonatomic,retain)CAShapeLayer* shapeLayer;
+@property(nonatomic,retain)CALayer* laceBackLayer;
 @property(nonatomic,assign)CGFloat circleWidth;
 @property(nonatomic,assign)CGFloat squareWidth;
 
 @property(nonatomic,assign)double firstAnimationDuration;
 @property(nonatomic,assign)double firstAnimationGap;
 @property(nonatomic,assign)double totalAnimationDuration;
+@property(nonatomic,assign)CGFloat maxLaceScale;
+@property(nonatomic,assign)CGFloat minLaceScale;
 
 @end
 
@@ -38,17 +42,25 @@
 }
 */
 
+-(CGFloat)maxLaceScale{
+    return 0.56;
+}
+
+-(CGFloat)minLaceScale{
+    return 0.42;
+}
+
 -(double)firstAnimationDuration{
-    return 0.2;
+    return 0.5;
 }
 
 //第一组动画结束后的停顿间隔
 -(double)firstAnimationGap{
-    return 1;
+    return 1.2;
 }
 
 -(double)totalAnimationDuration{
-    return 3;
+    return 3.3;
 }
 
 -(CGFloat)circleWidth{
@@ -77,12 +89,21 @@
     return _shapeLayer;
 }
 
+-(CALayer *)laceBackLayer{
+    if (!_laceBackLayer) {
+        _laceBackLayer = [CALayer new];
+        [self.layer addSublayer:_laceBackLayer];
+    }
+    return _laceBackLayer;
+}
+
 -(CACircleLayer *)circleLayer{
     if (!_circleLayer) {
         _circleLayer = [CACircleLayer new];
         _circleLayer.strokeColor = [UIColor whiteColor].CGColor;
-        _circleLayer.fillColor = self.themeColor.CGColor;
+//        _circleLayer.fillColor = self.themeColor.CGColor;
         _circleLayer.progress = 1;
+        _circleLayer.lineWidth = self.circleWidth / 2;
 //        _circleLayer.clipRectHeight = 6;
         [self.layer addSublayer:_circleLayer];
         
@@ -112,9 +133,10 @@
     CGFloat screenWidth = CGRectGetWidth(self.bounds);
     CGFloat screenHeight = CGRectGetHeight(self.bounds);
     
+    self.laceBackLayer.frame = self.bounds;
+    
     self.shapeLayer.frame = CGRectMake((screenWidth - self.circleWidth) / 2, (screenHeight - self.circleWidth) / 2, self.circleWidth, self.circleWidth);
     
-    self.circleLayer.lineWidth = self.circleWidth / 2;
     self.circleLayer.frame = CGRectMake((screenWidth - self.circleWidth) / 2, (screenHeight - self.circleWidth) / 2, self.circleWidth, self.circleWidth);
 //    self.circleLayer.backgroundColor = [UIColor brownColor].CGColor;
     
@@ -126,10 +148,142 @@
     @weakify(self);
     dispatch_after(popTime, dispatch_get_main_queue(),^(void){
         @strongify(self);
+        [self initLaceLayer];
         [self animationShape];
         [self animationCircle];
         [self animationSquare];
     });
+}
+
+-(void)initLaceLayer{
+    CGFloat diameter = self.circleWidth * 2;
+    
+    CGFloat halfW = (CGRectGetWidth(self.bounds) - diameter * self.minLaceScale) / 2.;
+    CGFloat halfH = (CGRectGetHeight(self.bounds) - diameter * self.minLaceScale) / 2.;
+    
+    int columns = ceil(halfW / (diameter * self.minLaceScale)) * 2 + 1;
+    int rows = ceil(halfH / (diameter * self.minLaceScale)) * 2 + 1;
+    
+    UIColor* strokeColor = //[[UIColor whiteColor] colorWithAlphaComponent:0.5];
+    [UIColor colorWithRed:253./255 green:100./255 blue:69./255 alpha:0.6];
+    
+    CGFloat offsetX = (columns * diameter * self.minLaceScale - CGRectGetWidth(self.bounds)) / 2.;
+    CGFloat offsetY = (rows * diameter * self.minLaceScale - CGRectGetHeight(self.bounds)) / 2.;
+    
+    for (int i = 0 ; i < columns; i ++) {
+        for (int j = 0; j < rows; j ++) {
+            LaceLayer* laceLayer = [[LaceLayer alloc] init];
+            laceLayer.frame = CGRectMake(0,0, diameter, diameter);
+            laceLayer.anchorPoint = CGPointMake(0, 0);
+            laceLayer.position = CGPointMake(i * diameter * self.minLaceScale - offsetX, j * diameter * self.minLaceScale - offsetY);
+            laceLayer.strokeColor = strokeColor.CGColor;
+            [laceLayer setTransform:CATransform3DMakeScale(self.minLaceScale, self.minLaceScale, 1)];
+            //[[UIColor whiteColor] colorWithAlphaComponent:0.5].CGColor;
+            
+            //    laceLayer.backgroundColor = [UIColor blueColor].CGColor;
+            laceLayer.lineWidth = 1.8;
+            [self.laceBackLayer addSublayer:laceLayer];
+            
+            [self animationLace:laceLayer diameter:diameter columns:columns rows:rows i:i j:j];
+        }
+    }
+    
+}
+
+-(void)animationLace:(CALayer*)laceLayer diameter:(CGFloat)diameter columns:(int)columns rows:(int)rows i:(int)i j:(int)j {
+    CAMediaTimingFunction* timingFunction = //[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn];
+    [CAMediaTimingFunction functionWithControlPoints:0.5 :0.2: 0.85:.4];
+    
+    CGFloat maxOffsetX = (columns * diameter * self.maxLaceScale - CGRectGetWidth(self.bounds)) / 2.;
+    CGFloat maxOffsetY = (rows * diameter * self.maxLaceScale - CGRectGetHeight(self.bounds)) / 2.;
+    
+    CGFloat beginTime = 0;
+    
+    int centerColumn = columns / 2;
+    int centerRow = rows / 2;
+    
+    CGPoint maxPoint = CGPointMake(i * diameter * self.maxLaceScale - maxOffsetX, j * diameter * self.maxLaceScale - maxOffsetY);
+//    CGPoint centerPoint = CGPointMake(centerColumn * diameter * self.maxLaceScale - offsetX, centerRow * diameter * self.maxLaceScale - offsetY);
+    
+    CABasicAnimation* an1Point = [CABasicAnimation animationWithKeyPath:@"position"];
+    an1Point.toValue = [NSValue valueWithCGPoint:maxPoint];
+    an1Point.fillMode = kCAFillModeForwards;
+    an1Point.duration = self.firstAnimationDuration;
+    an1Point.beginTime = beginTime;
+//    an1Point.removedOnCompletion = NO;
+    an1Point.timingFunction = timingFunction;
+    
+    CABasicAnimation* an1Scale = [CABasicAnimation animationWithKeyPath:@"transform"];
+    an1Scale.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(self.maxLaceScale, self.maxLaceScale, 1)];
+    an1Scale.fillMode = kCAFillModeForwards;
+    an1Scale.duration = self.firstAnimationDuration;
+    an1Scale.beginTime = an1Point.beginTime;
+    an1Scale.timingFunction = timingFunction;
+    
+    CGFloat largeScale = self.maxLaceScale + 0.02;
+    CGFloat largeOffsetX = (columns * diameter * largeScale - CGRectGetWidth(self.bounds)) / 2.;
+    CGFloat largeOffsetY = (rows * diameter * largeScale - CGRectGetHeight(self.bounds)) / 2.;
+    
+    CGFloat distance = sqrt((centerColumn - i) * (centerColumn - i) + (centerRow - j) * (centerRow - j));
+    CGFloat gapTime = 0.05;
+    
+    CAKeyframeAnimation* an2Point = [CAKeyframeAnimation animationWithKeyPath:@"position"];
+    an2Point.values = [NSMutableArray arrayWithObjects:
+                       [NSValue valueWithCGPoint:maxPoint],
+                       [NSValue valueWithCGPoint:CGPointMake(i * diameter * largeScale - largeOffsetX, j * diameter * largeScale - largeOffsetY)],
+                       [NSValue valueWithCGPoint:maxPoint],
+                       nil];
+    an2Point.duration = 0.3;
+    an2Point.fillMode = kCAFillModeForwards;
+    an2Point.beginTime = beginTime + self.firstAnimationDuration + distance * gapTime;
+    
+    CAKeyframeAnimation* an2Scale = [CAKeyframeAnimation animationWithKeyPath:@"transform"];
+    an2Scale.values = [NSMutableArray arrayWithObjects:
+                       [NSValue valueWithCATransform3D:CATransform3DMakeScale(self.maxLaceScale,self.maxLaceScale,1)],
+                       [NSValue valueWithCATransform3D:CATransform3DMakeScale(largeScale,largeScale,1)],
+                       [NSValue valueWithCATransform3D:CATransform3DMakeScale(self.maxLaceScale,self.maxLaceScale,1)],
+                       nil];
+    an2Scale.duration = an2Point.duration;
+//    an2Scale.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
+    an2Scale.fillMode = kCAFillModeForwards;
+    an2Scale.beginTime = an2Point.beginTime;
+    
+    CABasicAnimation* an2Opacity = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    an2Opacity.toValue = @0;
+    an2Opacity.fillMode = kCAFillModeForwards;
+    an2Opacity.duration = 0.5;
+    an2Opacity.beginTime = an2Scale.beginTime;
+    
+    CGFloat minOffsetX = (columns * diameter * self.minLaceScale - CGRectGetWidth(self.bounds)) / 2.;
+    CGFloat minOffsetY = (rows * diameter * self.minLaceScale - CGRectGetHeight(self.bounds)) / 2.;
+    CGPoint minPoint = CGPointMake(i * diameter * self.minLaceScale - minOffsetX, j * diameter * self.minLaceScale - minOffsetY);
+    
+    CABasicAnimation* an3Point = [CABasicAnimation animationWithKeyPath:@"position"];
+    an3Point.toValue = [NSValue valueWithCGPoint:minPoint];
+    an3Point.fillMode = kCAFillModeForwards;
+    an3Point.duration = 0.01;
+    an3Point.beginTime = an2Opacity.beginTime + an2Opacity.duration;
+    
+    CABasicAnimation* an3Scale = [CABasicAnimation animationWithKeyPath:@"transform"];
+    an3Scale.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(self.minLaceScale, self.minLaceScale, 1)];
+    an3Scale.fillMode = kCAFillModeForwards;
+    an3Scale.duration = an3Point.duration;
+    an3Scale.beginTime = an3Point.beginTime;
+    
+    CABasicAnimation* an3Opacity = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    an3Opacity.toValue = @1;
+    an3Opacity.fillMode = kCAFillModeForwards;
+    an3Opacity.duration = 1.2;
+    an3Opacity.beginTime = beginTime + self.firstAnimationDuration + self.firstAnimationGap + 0.2;
+    
+    CAAnimationGroup* group = [CAAnimationGroup animation];
+    group.animations = @[an1Point,an1Scale,an2Point,an2Scale,an2Opacity,an3Point,an3Scale,an3Opacity];//
+    group.duration = self.totalAnimationDuration;
+    group.repeatCount = FLT_MAX;
+    
+    [laceLayer addAnimation:group forKey:nil];
+    
+    
 }
 
 -(void)animationShape{
@@ -248,11 +402,11 @@
     an1Opacity.beginTime = self.firstAnimationDuration;
     
     
-    CABasicAnimation* an1Progress = [CABasicAnimation animationWithKeyPath:@"progress"];
-    an1Progress.fromValue = @1;
-    an1Progress.toValue = @1;
-    an1Progress.duration = self.firstAnimationDuration;
-    an1Progress.fillMode = kCAFillModeForwards;
+//    CABasicAnimation* an1Progress = [CABasicAnimation animationWithKeyPath:@"progress"];
+//    an1Progress.fromValue = @1;
+//    an1Progress.toValue = @1;
+//    an1Progress.duration = self.firstAnimationDuration;
+//    an1Progress.fillMode = kCAFillModeForwards;
     
     CGFloat targetScale = (self.squareWidth / self.circleWidth - 0.1);// * self.circleWidth / self.squareWidth;
     
@@ -307,7 +461,7 @@
 //    an2.fillMode = kCAFillModeForwards;
     
     CAAnimationGroup* group = [CAAnimationGroup animation];
-    group.animations = @[an1Progress,an1Opacity,an1Scale,an2Progress,an2Opacity,an2Scale,an2Rotation];//
+    group.animations = @[an1Opacity,an1Scale,an2Progress,an2Opacity,an2Scale,an2Rotation];//an1Progress,
     group.duration = self.totalAnimationDuration;
     group.repeatCount = FLT_MAX;
     

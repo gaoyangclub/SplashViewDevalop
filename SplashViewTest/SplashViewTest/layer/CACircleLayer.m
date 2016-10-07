@@ -11,8 +11,21 @@
 @interface CACircleLayer(){
 //    CGFloat _progress;
 }
+
 @end
 @implementation CACircleLayer
+
+//子类化CALayer时，有个地方要注意，因为CoreAnimation在生成中间帧的方式，是通过Copy操作生成了一大堆中间帧用的CALayer，它在复制CALayer的数据时，只能对CALayer原有的属性成员进行copy，不会copy后添加的诸如对象引用一类的东西，这就需要程序员重载
+//出处:http://www.cnblogs.com/pengyingh/articles/2381698.html
+- (id)initWithLayer:(id)layer
+{
+    self = [super initWithLayer:layer];
+    if(self != nil) {
+        CACircleLayer *myLayer = (CACircleLayer*)layer;
+        self.progress = myLayer.progress;//自定义的属性需要自己复制
+    }
+    return self;
+}
 
 
 -(void)setProgress:(CGFloat)progress{
