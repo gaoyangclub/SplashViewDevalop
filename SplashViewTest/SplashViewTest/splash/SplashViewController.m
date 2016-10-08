@@ -10,7 +10,7 @@
 #import "extobjc.h"
 
 @interface SplashViewController ()<SplashControllerDelegate>{
-    BOOL isFinishing;//私有变量
+    BOOL isFinishing;//
 }
 
 @end
@@ -43,9 +43,10 @@
 //播放结束动画
 -(void)finish{
     if (!isFinishing) {
-        isFinishing = true;
+        isFinishing = YES;
         __weak __typeof(self) weakSelf = self;
-        [UIView animateWithDuration:0.5 delay:300000 options:UIViewAnimationOptionCurveEaseIn animations:^{
+        double delay = 60000000;//TODO 这里无限显示开启界面 实际是根据服务请求等待时间而定
+        [UIView animateWithDuration:0.5 delay:delay options:UIViewAnimationOptionCurveEaseIn animations:^{
             //        [self setX:-kScreen_Width];
             weakSelf.sourceView.alpha = 0;
         } completion:^(BOOL finished) {
@@ -61,7 +62,6 @@
     self.sourceView.alpha = 0.99;
     
 //    __weak __typeof(self) weakSelf = self;
-//    __strong __typeof(self) strongSelf = weakSelf;
 //    @weakify(self);
     [UIView animateWithDuration:0.6 animations:^{
         self.sourceView.alpha = 1.0;
@@ -72,7 +72,7 @@
 }
 
 +(instancetype)initBySourceView:(UIView*)superView andSource:(SplashSourceView*)sourceView{
-    SplashViewController* splashView = [SplashViewController new];
+    SplashViewController* splashView = [[SplashViewController alloc] init];
     splashView.view.frame = superView.bounds;//全屏
 
     splashView.sourceView = sourceView;

@@ -23,10 +23,10 @@
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
-    self.window.rootViewController = [ViewController new];
+    self.window.rootViewController = [[ViewController alloc] init];
     
-//    SplashSourceView* sourceView = [SplashSourceDaDa new];//达达
-    SplashSourceView* sourceView = [SplashSourceTransport new];//自定义
+//    SplashSourceView* sourceView = [[SplashSourceDaDa alloc] init];//达达
+    SplashSourceView* sourceView = [[SplashSourceTransport alloc] init];//优步
 //    sourceView.backgroundColor = [UIColor orangeColor];
     [SplashViewController initBySourceView:self.window andSource:sourceView];
     //添加splash部分

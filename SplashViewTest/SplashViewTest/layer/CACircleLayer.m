@@ -54,15 +54,6 @@
 }
 
 -(void)drawInContext:(CGContextRef)ctx{
-//        UIBezierPath* path = [UIBezierPath bezierPathWithOvalInRect:self.frame];
-//    CGPoint arcCenter = CGPointMake(self.frame.origin.x - self.frame.size.width / 2, self.frame.origin.y - self.frame.size.height / 2);
-//    CGFloat radius = self.frame.size.width / 2 - self.lineWidth / 2;
-//    UIBezierPath* path = [UIBezierPath bezierPathWithArcCenter:arcCenter radius:radius startAngle:0 endAngle:self.progress clockwise:false];
-//    self.strokeStart = 0;
-//    self.strokeEnd = self.progress;
-//    self.fillColor = [UIColor clearColor].CGColor;
-//    self.path = path.CGPath;
-    
     CGFloat minWidth = MIN(CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds));
     CGFloat line = self.lineWidth ;
     if (line > minWidth / 2) {

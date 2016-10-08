@@ -11,9 +11,6 @@
 
 @interface CACircleLayer : CAShapeLayer
 
-//@property(nonatomic,assign) CGFloat angle;
 @property (nonatomic,assign)CGFloat progress;
-//@property CGColorRef strokeColor;
-//@property CGFloat lineWidth;
 
 @end

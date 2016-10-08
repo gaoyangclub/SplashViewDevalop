@@ -14,10 +14,12 @@
 
 @implementation ViewController
 
+//Splash隐藏后进去入主界面
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
 //    self.view.backgroundColor = [UIColor blueColor];
+    
 }
 
 - (void)didReceiveMemoryWarning {
