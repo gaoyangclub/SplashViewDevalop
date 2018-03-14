@@ -37,16 +37,6 @@
 //    return _progress;
 //}
 
-//-(void)setLineWidth:(CGFloat)lineWidth{
-//    self.lineWidth = lineWidth;
-//    [self setNeedsDisplay];
-//}
-//
-//-(void)setStrokeColor:(CGColorRef)strokeColor{
-//    self._strokeColor = strokeColor;
-//    [self setNeedsDisplay];
-//}
-
 //非常重要 识别自定义key是否被动画识别
 + (BOOL)needsDisplayForKey:(NSString *)key{
 //    NSLog(@"__%s__ %@",__FUNCTION__,key);

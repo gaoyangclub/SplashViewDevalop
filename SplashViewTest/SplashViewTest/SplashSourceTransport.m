@@ -401,6 +401,7 @@
     
 //    CAMediaTimingFunction* timingFunction = [CAMediaTimingFunction functionWithControlPoints:.55:.08:.68:.66];
     CAMediaTimingFunction* timingFunction = [CAMediaTimingFunction functionWithControlPoints:.7:.38:.21:.96];
+//    CAMediaTimingFunction* timingFunction = [CAMediaTimingFunction functionWithControlPoints:0.1 :0.4 :.21:.96];
     
     CABasicAnimation* an2Progress = [CABasicAnimation animationWithKeyPath:@"progress"];
     an2Progress.fromValue = @0;
